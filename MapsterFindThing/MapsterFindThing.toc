@@ -1,0 +1,8 @@
+## Interface: 30300
+## Title: MapsterFindThing
+## Notes: Repositions the FindThingFrame on the world map
+## Author: Lulleh
+## Version: 1.0
+## SavedVariables: MapsterFindThingDB
+
+MapsterFindThing.lua

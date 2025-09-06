@@ -6,8 +6,9 @@ local frame = CreateFrame("Frame")
 
 -- Default saved variables
 local defaults = {
-    xOffset = -220.5,  -- Default X offset from TopRight
-    yOffset = -1   -- Default Y offset from TopRight
+    xOffset = 0,     -- Default X offset (0 for automatic positioning)
+    yOffset = 0,     -- Default Y offset (0 for automatic positioning)
+    useAutoPosition = true  -- Use automatic positioning by default
 }
 
 -- Initialize saved variables
@@ -33,10 +34,15 @@ local function RepositionFindThingFrame()
     -- Clear all current points
     FindThingFrame:ClearAllPoints()
     
-    -- Set new position anchored to WorldMapFrame's TopRight
-    FindThingFrame:SetPoint("TOPRIGHT", WorldMapFrame, "TOPRIGHT", 
-                           MapsterFindThingDB.xOffset, 
-                           MapsterFindThingDB.yOffset)
+    if MapsterFindThingDB.useAutoPosition then
+        -- Use automatic positioning (frame appears to the right of the map)
+        FindThingFrame:SetPoint("TOPLEFT", WorldMapFrame, "TOPRIGHT", 0, 0)
+    else
+        -- Use manual positioning with saved offsets
+        FindThingFrame:SetPoint("TOPRIGHT", WorldMapFrame, "TOPRIGHT", 
+                               MapsterFindThingDB.xOffset, 
+                               MapsterFindThingDB.yOffset)
+    end
 end
 
 -- Hook to reposition when world map is shown
@@ -89,36 +95,60 @@ SlashCmdList["MAPSTERFINDTHING"] = function(msg)
     command = command and command:lower() or ""
     value = tonumber(value)
     
-    if command == "x" and value then
+    if command == "auto" then
+        MapsterFindThingDB.useAutoPosition = true
+        RepositionFindThingFrame()
+        print("|cFF00FF00MapsterFindThing:|r Switched to automatic positioning")
+        
+    elseif command == "manual" then
+        MapsterFindThingDB.useAutoPosition = false
+        RepositionFindThingFrame()
+        print("|cFF00FF00MapsterFindThing:|r Switched to manual positioning")
+        
+    elseif command == "x" and value then
+        MapsterFindThingDB.useAutoPosition = false
         MapsterFindThingDB.xOffset = value
         RepositionFindThingFrame()
-        print("|cFF00FF00MapsterFindThing:|r X offset set to " .. value)
+        print("|cFF00FF00MapsterFindThing:|r X offset set to " .. value .. " (manual mode)")
         
     elseif command == "y" and value then
+        MapsterFindThingDB.useAutoPosition = false
         MapsterFindThingDB.yOffset = value
         RepositionFindThingFrame()
-        print("|cFF00FF00MapsterFindThing:|r Y offset set to " .. value)
+        print("|cFF00FF00MapsterFindThing:|r Y offset set to " .. value .. " (manual mode)")
         
     elseif command == "reset" then
         MapsterFindThingDB.xOffset = defaults.xOffset
         MapsterFindThingDB.yOffset = defaults.yOffset
+        MapsterFindThingDB.useAutoPosition = defaults.useAutoPosition
         RepositionFindThingFrame()
-        print("|cFF00FF00MapsterFindThing:|r Position reset to defaults")
+        print("|cFF00FF00MapsterFindThing:|r Position reset to defaults (auto mode)")
         
     elseif command == "show" or command == "status" then
-        print("|cFF00FF00MapsterFindThing:|r Current position:")
-        print("  X offset: " .. MapsterFindThingDB.xOffset)
-        print("  Y offset: " .. MapsterFindThingDB.yOffset)
+        print("|cFF00FF00MapsterFindThing:|r Current settings:")
+        if MapsterFindThingDB.useAutoPosition then
+            print("  Mode: |cFF00FF00Automatic|r (frame to the right of map)")
+        else
+            print("  Mode: |cFFFFFF00Manual|r")
+            print("  X offset: " .. MapsterFindThingDB.xOffset)
+            print("  Y offset: " .. MapsterFindThingDB.yOffset)
+        end
         
     else
         -- Help text
         print("|cFF00FF00MapsterFindThing|r commands:")
-        print("  |cFFFFFF00/findthing x <number>|r - Set X offset (negative = left)")
-        print("  |cFFFFFF00/findthing y <number>|r - Set Y offset (negative = up)")
-        print("  |cFFFFFF00/findthing reset|r - Reset to default position")
-        print("  |cFFFFFF00/findthing show|r - Show current position")
+        print("  |cFFFFFF00/findthing auto|r - Use automatic positioning")
+        print("  |cFFFFFF00/findthing manual|r - Use manual positioning")
+        print("  |cFFFFFF00/findthing x <number>|r - Set X offset (switches to manual)")
+        print("  |cFFFFFF00/findthing y <number>|r - Set Y offset (switches to manual)")
+        print("  |cFFFFFF00/findthing reset|r - Reset to defaults (auto mode)")
+        print("  |cFFFFFF00/findthing show|r - Show current settings")
         print("  |cFFFFFF00/ft|r - Short version of /findthing")
-        print("  Current: X=" .. MapsterFindThingDB.xOffset .. ", Y=" .. MapsterFindThingDB.yOffset)
+        if MapsterFindThingDB.useAutoPosition then
+            print("  Current: |cFF00FF00Automatic positioning|r")
+        else
+            print("  Current: Manual (X=" .. MapsterFindThingDB.xOffset .. ", Y=" .. MapsterFindThingDB.yOffset .. ")")
+        end
     end
 end
 
